@@ -1,46 +1,48 @@
 from playwright.sync_api import sync_playwright
+from broken_links import check_broken_links, check_missing_images, check_security_headers
 
 def scan_website(url):
-    """
-    Opens a website, captures JavaScript console errors,
-    and simulates basic interactions.
-    """
     console_errors = []
+    broken_links_report = {}
+    images_report = {}
+    security_report = {}
 
     with sync_playwright() as p:
         browser = p.chromium.launch(headless=True)
         page = browser.new_page()
 
-        # Listen for console messages
+        # Capture console errors
         def handle_console(msg):
             if msg.type == "error":
                 console_errors.append(msg.text)
 
         page.on("console", handle_console)
-
-        # Load the page with timeout
         page.goto(url, wait_until="load", timeout=60000)
 
-        # Example interaction: click a button if present
-        if page.query_selector("button"):
-            try:
-                page.click("button")
-            except Exception as e:
-                console_errors.append(f"Interaction error: {e}")
+        # Run broken link check
+        broken_links_report = check_broken_links(page, url)
 
-        # Keep page alive longer to catch delayed errors
-        page.wait_for_timeout(5000)
+        # Run missing image check
+        images_report = check_missing_images(page, url)
 
+        page.wait_for_timeout(3000)
         page.close()
         browser.close()
 
+    # Check security headers (outside playwright context)
+    security_report = check_security_headers(url)
+
     return {
         "url": url,
-        "console_errors": console_errors
+        "console_errors": console_errors,
+        "broken_links": broken_links_report["broken_links"],
+        "ok_links": broken_links_report["ok_links"],
+        "broken_images": images_report["broken_images"],
+        "ok_images": images_report["ok_images"],
+        "security_headers": security_report
     }
 
-
 if __name__ == "__main__":
-    url = "https://evplanet.in/"
+    url = "https://example.com"
     result = scan_website(url)
     print(result)
