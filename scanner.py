@@ -58,7 +58,8 @@ def scan_website(url):
 
 
 if __name__ == "__main__":
+    import json
     url = "https://example.com"
     result = scan_website(url)
-    print(result)
+    print(json.dumps(result, indent=2))
 
