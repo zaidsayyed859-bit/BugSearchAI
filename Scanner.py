@@ -1,7 +1,21 @@
+"""
+Scanner.py
+
+Main module that combines all scanning functions:
+- Console errors
+- Broken links
+- Missing/broken images
+- Security headers
+"""
+
 from playwright.sync_api import sync_playwright
-from broken_links import check_broken_links, check_missing_images, check_security_headers
+from broken_links import check_broken_links
+from missing_images import check_missing_images
+from security_headers import check_security_headers
+
 
 def scan_website(url):
+    """Comprehensive website scanner"""
     console_errors = []
     broken_links_report = {}
     images_report = {}
@@ -42,7 +56,9 @@ def scan_website(url):
         "security_headers": security_report
     }
 
+
 if __name__ == "__main__":
     url = "https://example.com"
     result = scan_website(url)
     print(result)
+
